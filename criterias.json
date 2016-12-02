@@ -1,0 +1,50 @@
+[{
+  "id": "manufacturer",
+  "caption": "Manufacture",
+  "items": [{
+    "id": "sony",
+    "caption": "Sony"
+  }, {
+    "id": "htc",
+    "caption": "HTC"
+  },{
+    "id": "apple",
+    "caption": "Apple"
+  }, {
+    "id": "samsung",
+    "caption": "Samsung"
+  }]
+}, {
+  "id": "os",
+  "caption": "OS",
+  "items": [{
+    "id": "ios",
+    "caption": "iOS"
+  }, {
+    "id": "android",
+    "caption": "Android"
+  }, {
+    "id": "windows",
+    "caption": "Windows"
+  }]
+}, {
+  "id": "storage",
+  "caption": "Storage",
+  "items": [{
+    "id": 16,
+    "caption": "16 Gb"
+  }, {
+    "id": 32,
+    "caption": "32 Gb"
+  }]
+}, {
+  "id": "camera",
+  "caption": "Camera",
+  "items": [{
+    "id": 12,
+    "caption": "12 Mpx"
+  }, {
+    "id": 8,
+    "caption": "8 Mpx"
+  }]
+}]

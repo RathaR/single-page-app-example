@@ -4,6 +4,7 @@ $(function () {
 
 		// 	An array containing objects with information about the products.
 	var products = [],
+		criteria = [],
 
 		// Our filters object will contain an array of values for each filter
 
@@ -19,52 +20,7 @@ $(function () {
 
 	//	Checkbox filtering
 
-	var checkboxes = $('.all-products input[type=checkbox]');
 
-	checkboxes.click(function () {
-
-		var that = $(this),
-			specName = that.attr('name');
-
-		// When a checkbox is checked we need to write that in the filters object;
-		if(that.is(":checked")) {
-
-			// If the filter for this specification isn't created yet - do it.
-			if(!(filters[specName] && filters[specName].length)){
-				filters[specName] = [];
-			}
-
-			//	Push values into the chosen filter array
-			filters[specName].push(that.val());
-
-			// Change the url hash;
-			createQueryHash(filters);
-
-		}
-
-		// When a checkbox is unchecked we need to remove its value from the filters object.
-		if(!that.is(":checked")) {
-
-			if(filters[specName] && filters[specName].length && (filters[specName].indexOf(that.val()) != -1)){
-
-				// Find the checkbox value in the corresponding array inside the filters object.
-				var index = filters[specName].indexOf(that.val());
-
-				// Remove it.
-				filters[specName].splice(index, 1);
-
-				// If it was the last remaining value for this specification,
-				// delete the whole array.
-				if(!filters[specName].length){
-					delete filters[specName];
-				}
-
-			}
-
-			// Change the url hash;
-			createQueryHash(filters);
-		}
-	});
 
 	// When the "Clear all filters" button is pressed change the hash to '#' (go to the home page)
 	$('.filters button').click(function (e) {
@@ -73,9 +29,9 @@ $(function () {
 	});
 
 
-	// Single product page buttons
+	// Single & purchase product page buttons
 
-	var singleProductPage = $('.single-product');
+	var singleProductPage = $('.single-product, .purchase-product');
 
 	singleProductPage.on('click', function (e) {
 
@@ -98,16 +54,18 @@ $(function () {
 
 	// Get data about our products from products.json.
 	$.getJSON( "products.json", function( data ) {
-
-		// Write the data into our global variable.
 		products = data;
+		$.getJSON("criterias.json", function(data) {
+			criteria = data;
+			// Call a function to create HTML for all the products.
+			generateAllProductsHTML(products, criteria);
 
-		// Call a function to create HTML for all the products.
-		generateAllProductsHTML(products);
+			// Manually trigger a hashchange to start the app.
+			$(window).trigger('hashchange');
+		});
 
-		// Manually trigger a hashchange to start the app.
-		$(window).trigger('hashchange');
 	});
+
 
 
 	// An event handler with calls the render function on every hashchange.
@@ -126,7 +84,7 @@ $(function () {
 
 		// Hide whatever page is currently shown.
 		$('.main-content .page').removeClass('visible');
-
+		var checkboxes = $('.all-products input[type=checkbox]');
 
 		var	map = {
 
@@ -166,6 +124,10 @@ $(function () {
 				}
 
 				renderFilterResults(filters, products);
+			},
+			'#purchase': function () {
+				var index = url.split('#purchase/')[1].trim();
+				renderPurchasePage(index, products)
 			}
 
 		};
@@ -185,23 +147,79 @@ $(function () {
 	// This function is called only once - on page load.
 	// It fills up the products list via a handlebars template.
 	// It recieves one parameter - the data we took from products.json.
-	function generateAllProductsHTML(data){
+	function generateAllProductsHTML(data, criterias){
 
 		var list = $('.all-products .products-list');
 
 		var theTemplateScript = $("#products-template").html();
 		//Compile the template​
 		var theTemplate = Handlebars.compile (theTemplateScript);
+
+		var filterTemplateScript = $('#filter-template').html();
+		var filterTemplate = Handlebars.compile(filterTemplateScript);
+
+		var filter = $('.all-products .filters form');
+		filter.append(filterTemplate(criterias));
 		list.append (theTemplate(data));
 
+		var checkboxes = $('.all-products input[type=checkbox]');
 
+		checkboxes.click(function () {
+
+			var that = $(this),
+				specName = that.attr('name');
+
+			// When a checkbox is checked we need to write that in the filters object;
+			if(that.is(":checked")) {
+
+				// If the filter for this specification isn't created yet - do it.
+				if(!(filters[specName] && filters[specName].length)){
+					filters[specName] = [];
+				}
+
+				//	Push values into the chosen filter array
+				filters[specName].push(that.val());
+
+				// Change the url hash;
+				createQueryHash(filters);
+
+			}
+
+			// When a checkbox is unchecked we need to remove its value from the filters object.
+			if(!that.is(":checked")) {
+
+				if(filters[specName] && filters[specName].length && (filters[specName].indexOf(that.val()) != -1)){
+
+					// Find the checkbox value in the corresponding array inside the filters object.
+					var index = filters[specName].indexOf(that.val());
+
+					// Remove it.
+					filters[specName].splice(index, 1);
+
+					// If it was the last remaining value for this specification,
+					// delete the whole array.
+					if(!filters[specName].length){
+						delete filters[specName];
+					}
+
+				}
+
+				// Change the url hash;
+				createQueryHash(filters);
+			}
+		});
 		// Each products has a data-index attribute.
 		// On click change the url hash to open up a preview for this product only.
 		// Remember: every hashchange triggers the render function.
 		list.find('li').on('click', function (e) {
 			e.preventDefault();
-
 			var productIndex = $(this).data('index');
+
+			if($(e.target).is('.purchase-button')) {
+				window.location.hash = 'purchase/' + productIndex;
+				return;
+			}
+
 
 			window.location.hash = 'product/' + productIndex;
 		})
@@ -260,22 +278,37 @@ $(function () {
 
 	}
 
+	function renderPurchasePage(index, data) {
+		var page = $('.purchase-product'),
+			container = $('.preview-large');
+		if(data.length){
+			var product = _.find(data, {'id': +index});
+			if(product) {
+				container.find('h3').text(product.name);
+				container.find('img').attr('src', product.image.large);
+				container.find('p').text(product.name + ' purchased!');
+			}
+		}
+		page.addClass('visible');
+	}
+
 	// Find and render the filtered data results. Arguments are:
 	// filters - our global variable - the object with arrays about what we are searching for.
 	// products - an object with the full products list (from product.json).
 	function renderFilterResults(filters, products){
 
 			// This array contains all the possible filter criteria.
-		var criteria = ['manufacturer','storage','os','camera'],
-			results = [],
+		//var criteria = ['manufacturer','storage','os','camera'],
+			var results = [],
 			isFiltered = false;
 
 		// Uncheck all the checkboxes.
 		// We will be checking them again one by one.
+		var checkboxes = $('.all-products input[type=checkbox]');
 		checkboxes.prop('checked', false);
 
 
-		criteria.forEach(function (c) {
+		_.map(criteria, 'id').forEach(function (c) {
 
 			// Check if each of the possible filter criteria is actually in the filters object.
 			if(filters[c] && filters[c].length){

@@ -274,6 +274,8 @@ header h2.tzine a{
 	font-size: 13px;
 	cursor: pointer;
 
+	position: absolute;
+	z-index: 100;
 	width: 95px;
 	height: 32px;
 }
@@ -322,7 +324,8 @@ header h2.tzine a{
 	Single Product Page
 ----------------------------*/
 
-.single-product{
+.single-product,
+.purchase-product{
 	z-index: 100;
 }
 
@@ -337,7 +340,8 @@ header h2.tzine a{
 	z-index: 100;
 }
 
-.single-product.visible .overlay{
+.single-product.visible .overlay,
+.purchase-product.visible .overlay{
 	height: 100%;
 }
 
@@ -361,7 +365,8 @@ header h2.tzine a{
 
 }
 
-.single-product.visible .preview-large{
+.single-product.visible .preview-large,
+.purchase-product.visible .preview-large{
 	opacity: 1;
 	transition: 1.4s;
 	pointer-events: auto;
